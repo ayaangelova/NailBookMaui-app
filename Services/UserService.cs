@@ -16,7 +16,6 @@ public class UserService
     {
         _filePath = Path.Combine(FileSystem.AppDataDirectory, "registered-users.json");
         LoadUsersFromFile();
-        _currentUser = null;
     }
 
     public bool HasCurrentUser => _currentUser != null;
@@ -29,10 +28,22 @@ public class UserService
 
         return _currentUser;
     }
+    public void SetCurrentUser(int userId)
+    {
+        User? user = _registeredUsers.FirstOrDefault(u => u.Id == userId);
+        if (user == null)
+            throw new InvalidOperationException("Профилът не е намерен.");
 
-    public List<User> GetRegisteredUsers() => _registeredUsers.OrderBy(u => u.Id).ToList();
+        _currentUser = user;
+        CurrentUserChanged?.Invoke();
+    }
 
-    public User RegisterUser(string fullName, string phoneNumber, string email, string password, Salon? preferredSalon)
+    public List<User> GetRegisteredUsers()
+    {
+        return _registeredUsers.OrderBy(u => u.Id).ToList();
+    }
+
+    public User RegisterUser(string fullName, string phoneNumber, string email, string password)
     {
         ValidateRegistrationData(fullName, phoneNumber, email, password);
 
@@ -44,9 +55,11 @@ public class UserService
             u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
 
         if (emailExists)
-            throw new InvalidOperationException("Вече има регистриран профил с този имейл. Влезте в профила си.");
+            throw new InvalidOperationException("Вече има регистриран профил с този имейл.");
 
-        int nextId = _registeredUsers.Count == 0 ? 1 : _registeredUsers.Max(u => u.Id) + 1;
+        int nextId = _registeredUsers.Count == 0
+            ? 1
+            : _registeredUsers.Max(u => u.Id) + 1;
 
         User user = new()
         {
@@ -55,11 +68,7 @@ public class UserService
             PhoneNumber = phoneNumber,
             Email = email,
             Password = password,
-            LoyaltyPoints = 0,
-            PreferredSalonId = preferredSalon?.Id ?? 0,
-            PreferredSalonName = preferredSalon?.Name ?? string.Empty,
-            PreferredSalonAddress = preferredSalon?.Address ?? string.Empty,
-            PreferredSalonPhone = preferredSalon?.PhoneNumber ?? string.Empty
+            LoyaltyPoints = 0
         };
 
         _registeredUsers.Add(user);
@@ -70,9 +79,6 @@ public class UserService
 
         return user;
     }
-
-    public User RegisterUser(string fullName, string phoneNumber, string email, string password)
-        => RegisterUser(fullName, phoneNumber, email, password, null);
 
     public User Login(string email, string password)
     {
@@ -115,54 +121,6 @@ public class UserService
         return user;
     }
 
-    public void UpdateUser(User user)
-    {
-        if (_currentUser == null)
-            throw new InvalidOperationException("Няма активен профил за редакция.");
-
-        if (string.IsNullOrWhiteSpace(user.FullName))
-            throw new InvalidOperationException("Името не може да бъде празно.");
-
-        if (string.IsNullOrWhiteSpace(user.PhoneNumber))
-            throw new InvalidOperationException("Телефонът не може да бъде празен.");
-
-        User? existing = _registeredUsers.FirstOrDefault(u => u.Id == user.Id);
-
-        if (existing == null)
-        {
-            _registeredUsers.Add(user);
-        }
-        else
-        {
-            existing.FullName = user.FullName.Trim();
-            existing.PhoneNumber = user.PhoneNumber.Trim();
-            existing.Email = user.Email.Trim().ToLower();
-            existing.Password = string.IsNullOrWhiteSpace(user.Password) ? existing.Password : user.Password;
-            existing.LoyaltyPoints = user.LoyaltyPoints;
-            existing.ProfileImagePath = user.ProfileImagePath;
-            existing.PreferredSalonId = user.PreferredSalonId;
-            existing.PreferredSalonName = user.PreferredSalonName;
-            existing.PreferredSalonAddress = user.PreferredSalonAddress;
-            existing.PreferredSalonPhone = user.PreferredSalonPhone;
-        }
-
-        _currentUser = _registeredUsers.First(u => u.Id == user.Id);
-
-        SaveUsersToFile();
-        CurrentUserChanged?.Invoke();
-    }
-
-    public void SetCurrentUser(int userId)
-    {
-        User? user = _registeredUsers.FirstOrDefault(u => u.Id == userId);
-
-        if (user == null)
-            throw new InvalidOperationException("Профилът не е намерен.");
-
-        _currentUser = user;
-        CurrentUserChanged?.Invoke();
-    }
-
     public void Logout()
     {
         _currentUser = null;
@@ -179,8 +137,8 @@ public class UserService
 
         _currentUser.AddLoyaltyPoints(points);
 
-        SaveUsersToFile();
         CurrentUserChanged?.Invoke();
+        SaveUsersToFile();
     }
 
     public void RemoveLoyaltyPoints(int points)
@@ -191,7 +149,40 @@ public class UserService
         if (points <= 0)
             return;
 
-        _currentUser.LoyaltyPoints = Math.Max(0, _currentUser.LoyaltyPoints - points);
+        _currentUser.LoyaltyPoints -= points;
+
+        if (_currentUser.LoyaltyPoints < 0)
+            _currentUser.LoyaltyPoints = 0;
+
+        CurrentUserChanged?.Invoke();
+        SaveUsersToFile();
+    }
+
+    public void UpdateUser(User user)
+    {
+        if (_currentUser == null)
+            throw new InvalidOperationException("Няма активен профил за редакция.");
+
+        if (string.IsNullOrWhiteSpace(user.FullName))
+            throw new InvalidOperationException("Името не може да бъде празно.");
+
+        if (string.IsNullOrWhiteSpace(user.PhoneNumber))
+            throw new InvalidOperationException("Телефонът не може да бъде празен.");
+
+        User? existing = _registeredUsers.FirstOrDefault(u => u.Id == user.Id);
+
+        if (existing == null)
+            throw new InvalidOperationException("Профилът не е намерен.");
+
+        existing.FullName = user.FullName.Trim();
+        existing.PhoneNumber = user.PhoneNumber.Trim();
+        existing.ProfileImagePath = user.ProfileImagePath;
+        existing.PreferredSalonId = user.PreferredSalonId;
+        existing.PreferredSalonName = user.PreferredSalonName;
+        existing.PreferredSalonAddress = user.PreferredSalonAddress;
+        existing.PreferredSalonPhone = user.PreferredSalonPhone;
+
+        _currentUser = existing;
 
         SaveUsersToFile();
         CurrentUserChanged?.Invoke();
@@ -276,7 +267,6 @@ public class UserService
         }
         catch
         {
-            // При курсова демонстрация не спираме приложението, ако файлът не може да се запише.
         }
     }
 }

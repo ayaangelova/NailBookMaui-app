@@ -89,7 +89,7 @@ public class BookingViewModel : BaseViewModel
 
     public ICommand BookAppointmentCommand { get; }
     public ICommand PickImageCommand { get; }
-   
+
     public ICommand GoToRegistrationCommand { get; }
     public ICommand OpenSalonMapCommand { get; }
 
@@ -99,7 +99,7 @@ public class BookingViewModel : BaseViewModel
 
         BookAppointmentCommand = new AsyncCommand(BookAppointmentAsync);
         PickImageCommand = new AsyncCommand(PickImageAsync);
-       
+
         GoToRegistrationCommand = new AsyncCommand(GoToRegistrationAsync);
         OpenSalonMapCommand = new AsyncCommand(OpenSalonMapAsync);
 
@@ -254,30 +254,7 @@ public class BookingViewModel : BaseViewModel
         }
     }
 
-    private async Task CaptureImageAsync()
-    {
-        try
-        {
-            if (!MediaPicker.Default.IsCaptureSupported)
-            {
-                await AppData.Notifications.ShowErrorAsync(
-                    "Камерата не се поддържа на това устройство/емулатор.");
-                return;
-            }
-
-            FileResult? photo = await MediaPicker.Default.CapturePhotoAsync(new MediaPickerOptions
-            {
-                Title = "Снимайте дизайн за маникюр"
-            });
-
-            await SavePhotoAsync(photo);
-        }
-        catch
-        {
-            await AppData.Notifications.ShowErrorAsync(
-                "Неуспешно снимане. Използвайте виртуалната камера или изберете снимка от Gallery/Files.");
-        }
-    }
+   
 
     private async Task SavePhotoAsync(FileResult? photo)
     {
@@ -313,29 +290,20 @@ public class BookingViewModel : BaseViewModel
 
         try
         {
-            Location location = new(SelectedSalon.Latitude, SelectedSalon.Longitude);
+            string lat = SelectedSalon.Latitude
+                .ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string lon = SelectedSalon.Longitude
+                .ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-            MapLaunchOptions options = new()
-            {
-                Name = SelectedSalon.Name,
-                NavigationMode = NavigationMode.None
-            };
+            string url = $"https://www.google.com/maps/search/?api=1&query={lat},{lon}";
 
-            await Map.Default.OpenAsync(location, options);
+            await Browser.Default.OpenAsync(
+                new Uri(url),
+                BrowserLaunchMode.SystemPreferred);
         }
-        catch
+        catch (Exception ex)
         {
-            try
-            {
-                await Browser.Default.OpenAsync(
-                    SelectedSalon.GoogleMapsUrl,
-                    BrowserLaunchMode.External);
-            }
-            catch
-            {
-                await AppData.Notifications.ShowErrorAsync(
-                    "Картата не може да бъде отворена на това устройство.");
-            }
+            await AppData.Notifications.ShowErrorAsync($"Грешка при отваряне на картата: {ex.Message}");
         }
     }
 }

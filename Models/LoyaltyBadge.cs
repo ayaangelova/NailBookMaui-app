@@ -7,7 +7,7 @@ public class LoyaltyBadge
     public string Description { get; set; } = string.Empty;
     public int RequiredPoints { get; set; }
     public bool IsUnlocked { get; set; }
-    public string StatusText => IsUnlocked ? "Отключена" : $"Нужни точки: {RequiredPoints}";
+    
 
     public void CheckUnlock(int userPoints)
     {

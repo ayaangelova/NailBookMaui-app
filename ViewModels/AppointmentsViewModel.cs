@@ -82,37 +82,45 @@ public class AppointmentsViewModel : BaseViewModel
 
         try
         {
-            var user = AppData.Users.GetCurrentUser();
+            User user = AppData.Users.GetCurrentUser();
 
-            
-            var userAppointments = AppData.Appointments
-                .GetAppointmentsByUserId(user.Id)
-                .OrderBy(a => a.CreatedAt)
-                .ToList();
+            bool isPastAppointment = appointment.AppointmentDate < DateTime.Now;
 
-           
-            var firstAppointment = userAppointments.FirstOrDefault();
+            int pointsToRemove = 0;
 
-            bool isFirstBooking = firstAppointment != null && firstAppointment.Id == appointment.Id;
+            if (!isPastAppointment)
+            {
+                List<Appointment> userAppointments = AppData.Appointments
+                    .GetAppointmentsByUserId(user.Id)
+                    .OrderBy(a => a.CreatedAt)
+                    .ToList();
 
-            
+                Appointment? firstAppointment = userAppointments.FirstOrDefault();
+
+                bool isFirstBooking =
+                    firstAppointment != null &&
+                    firstAppointment.Id == appointment.Id;
+
+                pointsToRemove = isFirstBooking
+                    ? AppData.Content.GetFirstBookingBonusPoints()
+                    : 10;
+
+                AppData.Users.RemoveLoyaltyPoints(pointsToRemove);
+            }
+
             AppData.Appointments.CancelAppointment(appointment.Id);
 
-            int pointsToRemove = isFirstBooking
-                ? AppData.Content.GetFirstBookingBonusPoints() 
-                : 10;
+            string message = isPastAppointment
+                ? "Миналата резервация беше премахната. Точките не се променят."
+                : $"Резервацията беше отменена. Премахнати са {pointsToRemove} точки.";
 
-            AppData.Users.RemoveLoyaltyPoints(pointsToRemove);
-
-            await AppData.Notifications.ShowSuccessAsync(
-                $"Резервацията беше отменена. Премахнати са {pointsToRemove} точки.");
+            await AppData.Notifications.ShowSuccessAsync(message);
         }
         catch (Exception ex)
         {
             await AppData.Notifications.ShowErrorAsync(ex.Message);
         }
     }
-
 
 
 }

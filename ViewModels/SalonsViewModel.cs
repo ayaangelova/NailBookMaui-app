@@ -17,7 +17,7 @@ public class SalonsViewModel : BaseViewModel
         set
         {
             SetProperty(ref _selectedSalon, value);
-          
+
         }
     }
 
@@ -146,7 +146,7 @@ public class SalonsViewModel : BaseViewModel
         await AppData.Notifications.ShowSuccessAsync($"{salon.Name} е избран като салон по подразбиране.");
     }
 
-   
+
     private void RefreshActiveSalonText()
     {
         Salon? active = AppData.Locations.SelectedSalon;
