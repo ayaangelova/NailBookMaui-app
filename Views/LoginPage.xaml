@@ -1,0 +1,120 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NailBookMaui.Views.LoginPage"
+             Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="18">
+
+            <Image Source="appicon.png" HeightRequest="96" WidthRequest="96" HorizontalOptions="Center" />
+
+            <Label Text="NailBook"
+                   FontSize="34"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="#7A2F54" />
+
+            <Frame Style="{StaticResource CardFrame}">
+                <VerticalStackLayout Spacing="12">
+
+                    <Label Text="Вход"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           TextColor="#7A2F54" />
+
+                    <Entry Text="{Binding LoginEmail}"
+                           Placeholder="Имейл"
+                           Keyboard="Email" />
+
+                    <Entry Text="{Binding LoginPassword}"
+                           Placeholder="Парола"
+                           IsPassword="True" />
+
+                    <Button Text="Влез"
+                            Command="{Binding LoginCommand}" />
+
+                    <Button Text="Нямам създаден профил"
+                            Command="{Binding ToggleRegistrationCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="#7A2F54"
+                            FontAttributes="Bold" />
+
+                    <VerticalStackLayout IsVisible="{Binding IsRegistrationVisible}" Spacing="12">
+                        <BoxView HeightRequest="1" BackgroundColor="#F0C6DA" />
+
+                        <Label Text="Създаване на профил"
+                               FontSize="22"
+                               FontAttributes="Bold"
+                               TextColor="#7A2F54" />
+
+                        <Entry Text="{Binding FullName}" Placeholder="Име и фамилия" />
+                        <Entry Text="{Binding PhoneNumber}" Placeholder="Телефон" Keyboard="Telephone" />
+                        <Entry Text="{Binding RegisterEmail}" Placeholder="Имейл" Keyboard="Email" />
+                        <Entry Text="{Binding RegisterPassword}" Placeholder="Парола" IsPassword="True" />
+
+                        <Button Text="Регистрирай се"
+                                Command="{Binding RegisterCommand}" />
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1" BackgroundColor="#F0C6DA" />
+
+                    <Label Text="Профили, използвани на този телефон"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#7A2F54" />
+
+                    <CollectionView ItemsSource="{Binding SavedUsers}"
+                                    SelectionMode="None"
+                                    HeightRequest="190">
+
+                        <CollectionView.EmptyView>
+                            <Label Text="Все още няма запазени профили."
+                                   HorizontalOptions="Center"
+                                   TextColor="Gray" />
+                        </CollectionView.EmptyView>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame Style="{StaticResource CardFrame}" Margin="0,4" Padding="12">
+                                    <Frame.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectSavedUserCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    </Frame.GestureRecognizers>
+
+                                    <VerticalStackLayout Spacing="4">
+                                        <Label Text="{Binding FullName}"
+                                               FontAttributes="Bold"
+                                               FontSize="16" />
+
+                                        <Label Text="{Binding Email}"
+                                               FontSize="13"
+                                               TextColor="Gray" />
+                                    </VerticalStackLayout>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <VerticalStackLayout IsVisible="{Binding IsSavedUserSelected}" Spacing="10">
+                        <BoxView HeightRequest="1" BackgroundColor="#F0C6DA" />
+
+                        <Label Text="{Binding SelectedSavedUserText}"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="#7A2F54" />
+
+                        <Entry Text="{Binding SavedUserPassword}"
+                               Placeholder="Въведете парола"
+                               IsPassword="True" />
+
+                        <Button Text="Влез в избрания профил"
+                                Command="{Binding LoginSavedUserCommand}" />
+                    </VerticalStackLayout>
+
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

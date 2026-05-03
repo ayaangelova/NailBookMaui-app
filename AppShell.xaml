@@ -1,0 +1,16 @@
+    <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:NailBookMaui.Views"
+       x:Class="NailBookMaui.AppShell"
+       Shell.FlyoutBehavior="Disabled"
+       Title="NailBook">
+
+    <TabBar>
+        <ShellContent x:Name="HomeTab" Title="Начало" Route="home" ContentTemplate="{DataTemplate views:HomePage}" />
+        <ShellContent x:Name="ServicesTab" Title="Услуги" Route="services" ContentTemplate="{DataTemplate views:ServicesPage}" />
+        <ShellContent x:Name="BookingTab" Title="Запази" Route="booking" ContentTemplate="{DataTemplate views:BookingPage}" />
+        <ShellContent x:Name="AppointmentsTab" Title="Часове" Route="appointments" ContentTemplate="{DataTemplate views:AppointmentsPage}" />
+        <ShellContent x:Name="ExploreTab" Title="Идеи" Route="explore" ContentTemplate="{DataTemplate views:ExplorePage}" />
+        <ShellContent x:Name="ProfileTab" Title="Профил" Route="profile" ContentTemplate="{DataTemplate views:ProfilePage}" />
+    </TabBar>
+</Shell>

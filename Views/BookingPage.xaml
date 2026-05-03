@@ -1,0 +1,54 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NailBookMaui.Views.BookingPage"
+             Title="Запази час">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <Label Text="Запази час" FontSize="28" FontAttributes="Bold" />
+
+            
+
+            <Frame Style="{StaticResource CardFrame}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="1. Изберете салон за тази резервация" FontAttributes="Bold" />
+                    <Picker Title="Салон" ItemsSource="{Binding Salons}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedSalon}" />
+                    <Label Text="{Binding SelectedSalonText}" FontSize="13" TextColor="#7A2F54" FontAttributes="Bold" />
+                    <Button Text="Отвори карта на избрания салон" Command="{Binding OpenSalonMapCommand}" BackgroundColor="#7A2F54" />
+
+                    <Label Text="2. Изберете услуга от ценовия лист на салона" FontAttributes="Bold" />
+                    <Picker Title="Услуга" ItemsSource="{Binding Services}" ItemDisplayBinding="{Binding PickerDisplayText}" SelectedItem="{Binding SelectedService}" />
+                    <Label Text="{Binding SelectedServiceText}" FontSize="13" TextColor="#7A2F54" FontAttributes="Bold" />
+
+                    <Label Text="Дата" FontAttributes="Bold" />
+                    <DatePicker Date="{Binding SelectedDate}" />
+
+                    <Label Text="Час" FontAttributes="Bold" />
+                    <TimePicker Time="{Binding SelectedTime}" />
+
+                    <Label Text="Бележка към специалиста" FontAttributes="Bold" />
+                    <Editor Text="{Binding UserNote}" Placeholder="Например: искам нежен френски маникюр..." HeightRequest="90" />
+
+                    <Label Text="Снимка на желан дизайн" FontAttributes="Bold" />
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Избери от галерия" Command="{Binding PickImageCommand}" BackgroundColor="#7A2F54" />
+                        <Button Text="Снимай с камера" Command="{Binding CaptureImageCommand}" BackgroundColor="#D96BA0" />
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding DesignImagePath}" FontSize="11" TextColor="Gray" LineBreakMode="TailTruncation" />
+                    <Image Source="{Binding DesignImagePath}" HeightRequest="160" Aspect="AspectFill" />
+
+                    <Button Text="Потвърди резервация" Command="{Binding BookAppointmentCommand}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame BackgroundColor="#FDEBF3" BorderColor="#D96BA0" CornerRadius="18" Padding="16">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Контакти" FontSize="18" FontAttributes="Bold" TextColor="#7A2F54" />
+                   
+                    <Label Text="{Binding FooterSalonAddress}" />
+                    <Label Text="{Binding FooterSalonPhone}" />
+                    <Label Text="{Binding FooterSalonLocation}" FontSize="12" TextColor="Gray" />
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

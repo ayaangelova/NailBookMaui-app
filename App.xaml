@@ -1,0 +1,36 @@
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NailBookMaui.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <Color x:Key="Primary">#D96BA0</Color>
+            <Color x:Key="PrimaryDark">#7A2F54</Color>
+            <Color x:Key="BackgroundSoft">#FFF5FA</Color>
+            <Color x:Key="CardBackground">#FFFFFF</Color>
+
+            <Style TargetType="ContentPage">
+                <Setter Property="BackgroundColor" Value="{StaticResource BackgroundSoft}" />
+            </Style>
+
+            <Style TargetType="Label">
+                <Setter Property="TextColor" Value="#2B2B2B" />
+            </Style>
+
+            <Style TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                <Setter Property="TextColor" Value="White" />
+                <Setter Property="CornerRadius" Value="18" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="Padding" Value="14,10" />
+            </Style>
+
+            <Style x:Key="CardFrame" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+                <Setter Property="CornerRadius" Value="22" />
+                <Setter Property="Padding" Value="16" />
+                <Setter Property="HasShadow" Value="True" />
+                <Setter Property="Margin" Value="0,6" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

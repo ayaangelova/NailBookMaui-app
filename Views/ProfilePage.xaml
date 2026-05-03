@@ -1,0 +1,72 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NailBookMaui.Views.ProfilePage"
+             Title="Профил">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <Label Text="Профил" FontSize="28" FontAttributes="Bold" />
+            <Label Text="{Binding ProfileStatus}" FontAttributes="Bold" TextColor="#7A2F54" />
+
+
+
+            <Frame Style="{StaticResource CardFrame}">
+                <VerticalStackLayout Spacing="6">
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="Точки:" FontSize="20" FontAttributes="Bold" />
+                        <Label Text="{Binding CurrentUser.LoyaltyPoints}"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   TextColor="#D96BA0" />
+                    </HorizontalStackLayout>
+
+                   
+                    <Label Text="{Binding UserType, StringFormat='Тип потребител: {0}'}"
+               FontSize="16"
+               FontAttributes="Bold"
+               TextColor="#7A2F54" />
+
+                </VerticalStackLayout>
+            </Frame>
+
+    
+            <Button Text="Избери салон по подразбиране"
+        Command="{Binding OpenSalonsCommand}"
+        BackgroundColor="#7A2F54"
+        TextColor="White"
+        CornerRadius="18" />
+
+            <Label Text="Значки" FontSize="22" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding Badges}" HeightRequest="250">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Style="{StaticResource CardFrame}">
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="{Binding Title}" FontSize="18" FontAttributes="Bold" />
+                                <Label Text="{Binding Description}" FontSize="14" />
+                                <Label Text="{Binding StatusText}" FontSize="13" TextColor="#7A2F54" FontAttributes="Bold" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Button Text="Изход от профила"
+        Command="{Binding LogoutCommand}"
+        BackgroundColor="#D96BA0"
+        TextColor="White"
+        FontAttributes="Bold"
+        CornerRadius="20"
+        Margin="0,20,0,0" />
+
+            <Frame BackgroundColor="#FDEBF3" BorderColor="#D96BA0" CornerRadius="18" Padding="16">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Контакти" FontSize="18" FontAttributes="Bold" TextColor="#7A2F54" />
+                    
+                    <Label Text="{Binding FooterSalonAddress}" />
+                    <Label Text="{Binding FooterSalonPhone}" />
+                    <Label Text="{Binding FooterSalonLocation}" FontSize="12" TextColor="Gray" />
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

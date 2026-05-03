@@ -1,0 +1,220 @@
+using System.Text.Json;
+using Microsoft.Maui.Storage;
+using NailBookMaui.Models;
+
+namespace NailBookMaui.Services;
+
+public class UserService
+{
+    private readonly List<User> _registeredUsers = new();
+    private User? _currentUser;
+    private readonly string _filePath;
+
+    public event Action? CurrentUserChanged;
+
+    public UserService()
+    {
+        _filePath = Path.Combine(FileSystem.AppDataDirectory, "registered-users.json");
+        LoadUsersFromFile();
+        _currentUser = null;
+    }
+
+    public bool HasCurrentUser => _currentUser != null;
+    public User? CurrentUserOrNull => _currentUser;
+
+    public User GetCurrentUser()
+    {
+        if (_currentUser == null)
+            throw new InvalidOperationException("Първо трябва да влезете в профила си.");
+
+        return _currentUser;
+    }
+
+    public List<User> GetRegisteredUsers() => _registeredUsers.OrderBy(u => u.Id).ToList();
+
+    public User RegisterUser(string fullName, string phoneNumber, string email, string password, Salon? preferredSalon)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+            throw new InvalidOperationException("Името не може да бъде празно.");
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+            throw new InvalidOperationException("Телефонът не може да бъде празен.");
+        if (string.IsNullOrWhiteSpace(email))
+            throw new InvalidOperationException("Имейлът не може да бъде празен.");
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 4)
+            throw new InvalidOperationException("Паролата трябва да бъде поне 4 символа.");
+        bool emailExists = _registeredUsers.Any(u =>
+            u.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (emailExists)
+            throw new InvalidOperationException("Вече има регистриран профил с този имейл. Влезте в профила си.");
+
+        int nextId = _registeredUsers.Count == 0 ? 1 : _registeredUsers.Max(u => u.Id) + 1;
+
+        User user = new()
+        {
+            Id = nextId,
+            FullName = fullName.Trim(),
+            PhoneNumber = phoneNumber.Trim(),
+            Email = email.Trim(),
+            Password = password,
+            LoyaltyPoints = 0,
+            PreferredSalonId = preferredSalon?.Id ?? 0,
+            PreferredSalonName = preferredSalon?.Name ?? string.Empty,
+            PreferredSalonAddress = preferredSalon?.Address ?? string.Empty,
+            PreferredSalonPhone = preferredSalon?.PhoneNumber ?? string.Empty
+        };
+
+        _registeredUsers.Add(user);
+        _currentUser = user;
+        SaveUsersToFile();
+        CurrentUserChanged?.Invoke();
+
+        return user;
+    }
+    public void RemoveLoyaltyPoints(int points)
+    {
+        if (_currentUser == null)
+            throw new InvalidOperationException("Първо трябва да имате активен профил.");
+
+        _currentUser.LoyaltyPoints = Math.Max(0, _currentUser.LoyaltyPoints - points);
+        SaveUsersToFile();
+        CurrentUserChanged?.Invoke();
+    }
+
+    public User RegisterUser(string fullName, string phoneNumber, string email, string password)
+        => RegisterUser(fullName, phoneNumber, email, password, null);
+
+    // Оставено за старите страници в проекта, които още извикват стария метод.
+    public User RegisterUser(string fullName, string phoneNumber, string email, Salon preferredSalon)
+        => RegisterUser(fullName, phoneNumber, email, "1234", preferredSalon);
+
+    public User Login(string email, string password)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            throw new InvalidOperationException("Въведете имейл.");
+        if (string.IsNullOrWhiteSpace(password))
+            throw new InvalidOperationException("Въведете парола.");
+
+        User? user = _registeredUsers.FirstOrDefault(u =>
+            u.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (user == null || user.Password != password)
+            throw new InvalidOperationException("Грешен имейл или парола.");
+
+        _currentUser = user;
+        CurrentUserChanged?.Invoke();
+        return user;
+    }
+
+    public void UpdateUser(User user)
+    {
+        if (_currentUser == null)
+            throw new InvalidOperationException("Няма активен профил за редакция.");
+        if (string.IsNullOrWhiteSpace(user.FullName))
+            throw new InvalidOperationException("Името не може да бъде празно.");
+        if (string.IsNullOrWhiteSpace(user.PhoneNumber))
+            throw new InvalidOperationException("Телефонът не може да бъде празен.");
+        if (string.IsNullOrWhiteSpace(user.Email))
+            throw new InvalidOperationException("Имейлът не може да бъде празен.");
+
+        User? existing = _registeredUsers.FirstOrDefault(u => u.Id == user.Id);
+
+        if (existing == null)
+        {
+            _registeredUsers.Add(user);
+        }
+        else
+        {
+            existing.FullName = user.FullName.Trim();
+            existing.PhoneNumber = user.PhoneNumber.Trim();
+            existing.Email = user.Email.Trim();
+            existing.Password = string.IsNullOrWhiteSpace(user.Password) ? existing.Password : user.Password;
+            existing.LoyaltyPoints = user.LoyaltyPoints;
+            existing.ProfileImagePath = user.ProfileImagePath;
+            existing.PreferredSalonId = user.PreferredSalonId;
+            existing.PreferredSalonName = user.PreferredSalonName;
+            existing.PreferredSalonAddress = user.PreferredSalonAddress;
+            existing.PreferredSalonPhone = user.PreferredSalonPhone;
+        }
+
+        _currentUser = _registeredUsers.First(u => u.Id == user.Id);
+        SaveUsersToFile();
+        CurrentUserChanged?.Invoke();
+    }
+
+    public void SetCurrentUser(int userId)
+    {
+        User? user = _registeredUsers.FirstOrDefault(u => u.Id == userId);
+        if (user == null)
+            throw new InvalidOperationException("Профилът не е намерен.");
+
+        _currentUser = user;
+        CurrentUserChanged?.Invoke();
+    }
+
+    public void Logout()
+    {
+        _currentUser = null;
+        CurrentUserChanged?.Invoke();
+    }
+
+    public void AddLoyaltyPoints(int points)
+    {
+        if (_currentUser == null)
+            throw new InvalidOperationException("Първо трябва да имате активен профил.");
+
+        _currentUser.AddLoyaltyPoints(points);
+        SaveUsersToFile();
+        CurrentUserChanged?.Invoke();
+    }
+
+    public List<LoyaltyBadge> GetUserBadges()
+    {
+        int points = _currentUser?.LoyaltyPoints ?? 0;
+
+        List<LoyaltyBadge> badges = new()
+        {
+            new LoyaltyBadge { Id = 1, Title = "Нов клиент", Description = "Направена първа резервация.", RequiredPoints = 10 },
+            new LoyaltyBadge { Id = 2, Title = "Редовен клиент", Description = "Направени няколко успешни резервации.", RequiredPoints = 20 },
+            new LoyaltyBadge { Id = 3, Title = "Beauty Lover", Description = "Редовен потребител на приложението.", RequiredPoints = 50 },
+            new LoyaltyBadge { Id = 4, Title = "VIP клиент", Description = "Потребител с висока активност.", RequiredPoints = 100 }
+        };
+
+        foreach (var badge in badges)
+            badge.CheckUnlock(points);
+
+        return badges;
+    }
+
+    private void LoadUsersFromFile()
+    {
+        try
+        {
+            if (!File.Exists(_filePath))
+                return;
+
+            string json = File.ReadAllText(_filePath);
+            List<User>? users = JsonSerializer.Deserialize<List<User>>(json);
+
+            if (users != null)
+                _registeredUsers.AddRange(users);
+        }
+        catch
+        {
+            _registeredUsers.Clear();
+        }
+    }
+
+    private void SaveUsersToFile()
+    {
+        try
+        {
+            string json = JsonSerializer.Serialize(_registeredUsers, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(_filePath, json);
+        }
+        catch
+        {
+            // При курсова демонстрация не спираме приложението, ако файлът не може да се запише.
+        }
+    }
+}

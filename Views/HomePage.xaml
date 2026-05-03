@@ -1,0 +1,77 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NailBookMaui.Views.HomePage"
+             Title="Начало">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="18">
+            <Frame Style="{StaticResource CardFrame}" BackgroundColor="#D96BA0">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="NailBook" FontSize="34" FontAttributes="Bold" TextColor="White" />
+                    <Label Text="{Binding WelcomeMessage}" FontSize="20" TextColor="White" />
+                    <Label Text="Онлайн записване за маникюр" FontSize="15" TextColor="White" />
+                    <Button Text="Запази час" BackgroundColor="White" TextColor="#7A2F54" Clicked="GoToBooking_Clicked" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame Style="{StaticResource CardFrame}">
+                <VerticalStackLayout Spacing="8">
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="Точки за лоялност:" FontSize="18" FontAttributes="Bold" />
+                        <Label Text="{Binding LoyaltyPoints}" FontSize="18" TextColor="#D96BA0" FontAttributes="Bold" />
+                    </HorizontalStackLayout>
+                    <Label Text="Събирайте точки при всяка резервация и отключвайте значки в профила." FontSize="13" TextColor="Gray" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame Style="{StaticResource CardFrame}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Следващ час" FontSize="20" FontAttributes="Bold" />
+                    <Label Text="{Binding NextAppointmentText}" FontSize="14" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame Style="{StaticResource CardFrame}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Съвет на деня" FontSize="20" FontAttributes="Bold" />
+                    <Label Text="{Binding TipTitle}" FontSize="16" TextColor="#D96BA0" FontAttributes="Bold" />
+                    <Label Text="{Binding TipText}" FontSize="14" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Label Text="Популярни услуги" FontSize="22" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding PopularServices}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Style="{StaticResource CardFrame}">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+                                <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" />
+                                <Label Grid.Column="1" Text="{Binding FormattedPrice}" FontSize="17" FontAttributes="Bold" TextColor="#D96BA0" />
+                                <Label Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding SalonDisplayText}" FontSize="13" TextColor="#7A2F54" FontAttributes="Bold" />
+                                <Label Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Description}" FontSize="14" />
+                                <Label Grid.Row="3" Grid.ColumnSpan="2" Text="{Binding FormattedDuration}" FontSize="13" TextColor="Gray" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Frame Style="{StaticResource CardFrame}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Дизайн на седмицата" FontSize="20" FontAttributes="Bold" />
+                    <Label Text="Milky French с нежна декорация — добавете снимка при резервация, за да покажете желания стил." />
+                    <Button Text="Виж още идеи" Clicked="GoToExplore_Clicked" BackgroundColor="#7A2F54" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame BackgroundColor="#FDEBF3" BorderColor="#D96BA0" CornerRadius="18" Padding="16">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Контакти" FontSize="18" FontAttributes="Bold" TextColor="#7A2F54" />
+                    
+                    <Label Text="{Binding FooterSalonAddress}" />
+                    <Label Text="{Binding FooterSalonPhone}" />
+                    <Label Text="{Binding FooterSalonLocation}" FontSize="12" TextColor="Gray" />
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

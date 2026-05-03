@@ -1,0 +1,62 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NailBookMaui.Views.AppointmentsPage"
+             Title="Моите часове">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <Label Text="Моите часове" FontSize="28" FontAttributes="Bold" />
+
+            <Button Text="Обнови"
+        Command="{Binding RefreshCommand}"
+        BackgroundColor="#7A2F54"
+        TextColor="White"
+        CornerRadius="18" />
+
+            <CollectionView ItemsSource="{Binding Appointments}" SelectedItem="{Binding SelectedAppointment}" SelectionMode="Single" HeightRequest="520">
+                <CollectionView.EmptyView>
+                    <Label Text="Няма записани часове за активния профил." HorizontalOptions="Center" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Style="{StaticResource CardFrame}">
+                            <VerticalStackLayout Spacing="7">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="{Binding Service.Name}" FontSize="18" FontAttributes="Bold" />
+                                    <Label Grid.Column="1" Text="{Binding DisplayStatus}" TextColor="#D96BA0" FontAttributes="Bold" />
+                                </Grid>
+
+                                <Label Text="{Binding DisplayDate}" FontSize="14" />
+                                <Label Text="{Binding SalonDisplayText}" FontSize="13" TextColor="#7A2F54" FontAttributes="Bold" />
+                                <Label Text="{Binding UserNote}" FontSize="13" TextColor="Gray" />
+                                <Image Source="{Binding DesignImagePath}"
+       IsVisible="{Binding HasDesignImage}"
+       Aspect="AspectFill"
+       Margin="0,5,0,0" />
+                                <Label Text="{Binding DesignImagePath}" FontSize="11" TextColor="Gray" LineBreakMode="TailTruncation" />
+
+                                <Button Text="Отмени този час"
+        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CancelSpecificAppointmentCommand}"
+        CommandParameter="{Binding .}"
+        BackgroundColor="#7A2F54"
+        TextColor="White"
+        CornerRadius="18" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            
+
+            <Frame BackgroundColor="#FDEBF3" BorderColor="#D96BA0" CornerRadius="18" Padding="16">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Контакти" FontSize="18" FontAttributes="Bold" TextColor="#7A2F54" />
+                   
+                    <Label Text="{Binding FooterSalonAddress}" />
+                    <Label Text="{Binding FooterSalonPhone}" />
+                    <Label Text="{Binding FooterSalonLocation}" FontSize="12" TextColor="Gray" />
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

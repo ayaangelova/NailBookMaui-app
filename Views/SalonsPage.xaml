@@ -1,0 +1,80 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Name="SalonsRoot"
+             x:Class="NailBookMaui.Views.SalonsPage"
+             Title="Близки салони">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+            <Label Text="Близки салони" FontSize="28" FontAttributes="Bold" />
+            
+            <Frame Style="{StaticResource CardFrame}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Използване на местоположение" FontSize="18" FontAttributes="Bold" />
+                    <Label Text="{Binding LocationStatus}" FontSize="14" />
+                    <Button Text="Вземи текущо местоположение" Command="{Binding LoadLocationCommand}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame BackgroundColor="#FDEBF3" BorderColor="#D96BA0" CornerRadius="18" Padding="16">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="В момента активен салон" FontSize="18" FontAttributes="Bold" TextColor="#7A2F54" />
+                    <Label Text="{Binding ActiveSalonText}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Label Text="Търсачка за салони" FontSize="18" FontAttributes="Bold" />
+            <SearchBar Placeholder="Търси по име, квартал или адрес..." Text="{Binding SearchText}" />
+            <Button Text="Покажи всички салони" Command="{Binding RefreshSalonsCommand}" BackgroundColor="#7A2F54" />
+
+            <Label Text="Изберете салон" FontSize="18" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding Salons}" SelectedItem="{Binding SelectedSalon}" SelectionMode="Single" HeightRequest="470">
+                <CollectionView.EmptyView>
+                    <Label Text="Няма намерени салони по това търсене." HorizontalOptions="Center" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Style="{StaticResource CardFrame}">
+                            <VerticalStackLayout Spacing="6">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" />
+                                    <Label Grid.Column="1" Text="{Binding FormattedDistance}" TextColor="#D96BA0" FontAttributes="Bold" />
+                                </Grid>
+                                <Label Text="{Binding Address}" FontSize="14" />
+                                <Label Text="{Binding PhoneNumber}" FontSize="13" TextColor="Gray" />
+                                <Label Text="{Binding WorkingHours}" FontSize="13" TextColor="#7A2F54" />
+                                <Label Text="{Binding Description}" FontSize="13" />
+                                <Label Text="{Binding CoordinatesText}" FontSize="12" TextColor="Gray" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <Button Text="Избери"
+                                            Command="{Binding BindingContext.ChooseSalonCommand, Source={x:Reference SalonsRoot}}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#D96BA0"
+                                            TextColor="White"
+                                            CornerRadius="18" />
+                                    <Button Text="Направи активен"
+                                            Command="{Binding BindingContext.ActivateSalonCommand, Source={x:Reference SalonsRoot}}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#7A2F54"
+                                            TextColor="White"
+                                            CornerRadius="18" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            
+
+            <Frame BackgroundColor="#FDEBF3" BorderColor="#D96BA0" CornerRadius="18" Padding="16">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Контакти" FontSize="18" FontAttributes="Bold" TextColor="#7A2F54" />
+                    
+                    <Label Text="{Binding FooterSalonAddress}" />
+                    <Label Text="{Binding FooterSalonPhone}" />
+                    <Label Text="{Binding FooterSalonLocation}" FontSize="12" TextColor="Gray" />
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
