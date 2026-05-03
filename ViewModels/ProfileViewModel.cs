@@ -62,6 +62,7 @@ public class ProfileViewModel : BaseViewModel
             CurrentUser = AppData.Users.GetCurrentUser();
             ProfileStatus = $"Активен профил: {CurrentUser.FullName}";
         }
+        OnPropertyChanged(nameof(CurrentUser));
 
         LoadBadges();
         LoadRegisteredUsers();

@@ -82,13 +82,30 @@ public class AppointmentsViewModel : BaseViewModel
 
         try
         {
+            var user = AppData.Users.GetCurrentUser();
+
+            
+            var userAppointments = AppData.Appointments
+                .GetAppointmentsByUserId(user.Id)
+                .OrderBy(a => a.CreatedAt)
+                .ToList();
+
+           
+            var firstAppointment = userAppointments.FirstOrDefault();
+
+            bool isFirstBooking = firstAppointment != null && firstAppointment.Id == appointment.Id;
+
+            
             AppData.Appointments.CancelAppointment(appointment.Id);
-            AppData.Users.RemoveLoyaltyPoints(10);
 
-            SelectedAppointment = null;
+            int pointsToRemove = isFirstBooking
+                ? AppData.Content.GetFirstBookingBonusPoints() 
+                : 10;
 
-            await AppData.Notifications.ShowSuccessAsync("Часът беше отменен и 10 точки бяха премахнати.");
-            LoadAppointments();
+            AppData.Users.RemoveLoyaltyPoints(pointsToRemove);
+
+            await AppData.Notifications.ShowSuccessAsync(
+                $"Резервацията беше отменена. Премахнати са {pointsToRemove} точки.");
         }
         catch (Exception ex)
         {
@@ -97,5 +114,5 @@ public class AppointmentsViewModel : BaseViewModel
     }
 
 
-   
+
 }

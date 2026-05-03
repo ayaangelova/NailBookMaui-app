@@ -29,7 +29,5 @@ public class ExploreViewModel : BaseViewModel
         foreach (var design in AppData.Content.GetDesigns())
             Designs.Add(design);
 
-        foreach (var tip in AppData.Content.GetTips())
-            Tips.Add(tip);
     }
 }

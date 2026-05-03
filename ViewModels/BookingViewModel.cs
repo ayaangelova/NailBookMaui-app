@@ -4,8 +4,6 @@ using NailBookMaui.Services;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
-
-
 namespace NailBookMaui.ViewModels;
 
 public class BookingViewModel : BaseViewModel
@@ -19,8 +17,8 @@ public class BookingViewModel : BaseViewModel
         get => _selectedService;
         set
         {
-            SetProperty(ref _selectedService, value);
-            OnPropertyChanged(nameof(SelectedServiceText));
+            if (SetProperty(ref _selectedService, value))
+                OnPropertyChanged(nameof(SelectedServiceText));
         }
     }
 
@@ -34,6 +32,7 @@ public class BookingViewModel : BaseViewModel
             {
                 OnPropertyChanged(nameof(SelectedSalonText));
                 LoadServicesForSelectedSalon();
+                UpdatePromotionInfo();
             }
         }
     }
@@ -73,9 +72,16 @@ public class BookingViewModel : BaseViewModel
         set => SetProperty(ref _loginWarning, value);
     }
 
+    private string _promotionInfo = string.Empty;
+    public string PromotionInfo
+    {
+        get => _promotionInfo;
+        set => SetProperty(ref _promotionInfo, value);
+    }
+
     public string SelectedServiceText => SelectedService == null
         ? "Няма избрана услуга. Първо изберете салон, после услуга от неговия ценови лист."
-        : $"✓ Избрана услуга: {SelectedService.Name} - {SelectedService.Price:F2} euro / {SelectedService.DurationMinutes} мин. ({SelectedService.SalonName})";
+        : $"✓ Избрана услуга: {SelectedService.Name} - {SelectedService.Price:F2} евро / {SelectedService.DurationMinutes} мин. ({SelectedService.SalonName})";
 
     public string SelectedSalonText => SelectedSalon == null
         ? "Няма избран салон за тази резервация."
@@ -83,23 +89,36 @@ public class BookingViewModel : BaseViewModel
 
     public ICommand BookAppointmentCommand { get; }
     public ICommand PickImageCommand { get; }
-    public ICommand CaptureImageCommand { get; }
+   
     public ICommand GoToRegistrationCommand { get; }
     public ICommand OpenSalonMapCommand { get; }
 
     public BookingViewModel()
     {
         Title = "Запази час";
+
         BookAppointmentCommand = new AsyncCommand(BookAppointmentAsync);
         PickImageCommand = new AsyncCommand(PickImageAsync);
-        CaptureImageCommand = new AsyncCommand(CaptureImageAsync);
+       
         GoToRegistrationCommand = new AsyncCommand(GoToRegistrationAsync);
         OpenSalonMapCommand = new AsyncCommand(OpenSalonMapAsync);
+
         AppData.Users.CurrentUserChanged += UpdateLoginWarning;
         AppData.Locations.SelectedSalonChanged += RefreshSelectedSalonFromActive;
+
         LoadSalons();
-        RefreshFooter();
         UpdateLoginWarning();
+        UpdatePromotionInfo();
+    }
+
+    private void LoadSalons()
+    {
+        Salons.Clear();
+
+        foreach (Salon salon in AppData.Locations.GetNearbySalons())
+            Salons.Add(salon);
+
+        RefreshSelectedSalonFromActive();
     }
 
     private void LoadServicesForSelectedSalon()
@@ -113,32 +132,37 @@ public class BookingViewModel : BaseViewModel
             return;
         }
 
-        foreach (var service in AppData.BeautyServices.GetServicesBySalonId(SelectedSalon.Id))
+        foreach (BeautyService service in AppData.BeautyServices.GetServicesBySalonId(SelectedSalon.Id))
             Services.Add(service);
 
         OnPropertyChanged(nameof(SelectedServiceText));
     }
 
-    private void LoadSalons()
-    {
-        Salons.Clear();
-        foreach (Salon salon in AppData.Locations.GetNearbySalons())
-            Salons.Add(salon);
-
-        RefreshSelectedSalonFromActive();
-    }
-
     private void RefreshSelectedSalonFromActive()
     {
         SelectedSalon = AppData.Locations.SelectedSalon;
-        RefreshFooter();
     }
 
     private void UpdateLoginWarning()
     {
         LoginWarning = AppData.Users.HasCurrentUser
-            ? "Имате активен профил. Изберете салон, после услуга от ценовия лист на този салон, дата и час."
+            ? "Имате активен профил. Изберете салон, услуга, дата и час."
             : "За да запазите час, първо трябва да се регистрирате или да изберете запазен профил.";
+    }
+
+    private void UpdatePromotionInfo()
+    {
+        if (SelectedSalon == null)
+        {
+            PromotionInfo = "Изберете салон, за да видите активните промоции.";
+            return;
+        }
+
+        List<BeautyService> allServices = AppData.BeautyServices.GetAllServices();
+
+        PromotionInfo = AppData.Content.GetPromotionPriceText(
+            SelectedSalon.Id,
+            allServices);
     }
 
     private async Task GoToRegistrationAsync()
@@ -152,8 +176,16 @@ public class BookingViewModel : BaseViewModel
         {
             if (!AppData.Users.HasCurrentUser)
             {
-                await AppData.Notifications.ShowErrorAsync("Не може да запазите час без регистрация. Моля, отворете секция „Регистрация“.");
+                await AppData.Notifications.ShowErrorAsync(
+                    "Не може да запазите час без регистрация. Моля, отворете секция „Регистрация“.");
+
                 await Shell.Current.GoToAsync("//registration");
+                return;
+            }
+
+            if (SelectedSalon == null)
+            {
+                await AppData.Notifications.ShowErrorAsync("Моля, изберете салон.");
                 return;
             }
 
@@ -163,20 +195,35 @@ public class BookingViewModel : BaseViewModel
                 return;
             }
 
-            if (SelectedSalon == null)
-            {
-                await AppData.Notifications.ShowErrorAsync("Моля, изберете салон към резервацията.");
-                return;
-            }
-
             DateTime appointmentDateTime = SelectedDate.Date + SelectedTime;
-            var user = AppData.Users.GetCurrentUser();
-            var appointment = AppData.Appointments.CreateAppointment(user.Id, SelectedService, SelectedSalon, appointmentDateTime, UserNote, DesignImagePath);
-            AppData.Users.AddLoyaltyPoints(10);
+
+            User user = AppData.Users.GetCurrentUser();
+
+            Appointment appointment = AppData.Appointments.CreateAppointment(
+                user.Id,
+                SelectedService,
+                SelectedSalon,
+                appointmentDateTime,
+                UserNote,
+                DesignImagePath);
+
+            bool isFirstBooking = !AppData.Appointments
+                .GetAppointmentsByUserId(user.Id)
+                .Any(a => a.Id != appointment.Id);
+
+            int points = isFirstBooking
+                ? AppData.Content.GetFirstBookingBonusPoints()
+                : 10;
+
+            AppData.Users.AddLoyaltyPoints(points);
             AppData.Locations.SelectSalon(SelectedSalon);
 
-            await AppData.Notifications.ShowSuccessAsync($"Вашият час беше запазен в {SelectedSalon.Name}. Получавате 10 точки за лоялност.");
-            await AppData.Notifications.ShowReminderAsync(SelectedService.Name, appointment.AppointmentDate);
+            await AppData.Notifications.ShowSuccessAsync(
+                $"Вашият час беше запазен в {SelectedSalon.Name}. Получавате {points} точки за лоялност.");
+
+            await AppData.Notifications.ShowReminderAsync(
+                SelectedService.Name,
+                appointment.AppointmentDate);
 
             UserNote = string.Empty;
             DesignImagePath = string.Empty;
@@ -202,7 +249,8 @@ public class BookingViewModel : BaseViewModel
         }
         catch
         {
-            await AppData.Notifications.ShowErrorAsync("Неуспешно избиране на снимка. Проверете разрешенията за достъп до галерия.");
+            await AppData.Notifications.ShowErrorAsync(
+                "Неуспешно избиране на снимка. Проверете разрешенията за достъп до галерия.");
         }
     }
 
@@ -212,7 +260,8 @@ public class BookingViewModel : BaseViewModel
         {
             if (!MediaPicker.Default.IsCaptureSupported)
             {
-                await AppData.Notifications.ShowErrorAsync("Камерата не се поддържа на това устройство/емулатор.");
+                await AppData.Notifications.ShowErrorAsync(
+                    "Камерата не се поддържа на това устройство/емулатор.");
                 return;
             }
 
@@ -225,7 +274,8 @@ public class BookingViewModel : BaseViewModel
         }
         catch
         {
-            await AppData.Notifications.ShowErrorAsync("Неуспешно снимане. Използвайте виртуалната камера или изберете снимка от Gallery/Files.");
+            await AppData.Notifications.ShowErrorAsync(
+                "Неуспешно снимане. Използвайте виртуалната камера или изберете снимка от Gallery/Files.");
         }
     }
 
@@ -235,6 +285,7 @@ public class BookingViewModel : BaseViewModel
             return;
 
         string extension = Path.GetExtension(photo.FileName);
+
         if (string.IsNullOrWhiteSpace(extension))
             extension = ".jpg";
 
@@ -243,10 +294,13 @@ public class BookingViewModel : BaseViewModel
 
         await using Stream sourceStream = await photo.OpenReadAsync();
         await using FileStream localFileStream = File.OpenWrite(localPath);
+
         await sourceStream.CopyToAsync(localFileStream);
 
         DesignImagePath = localPath;
-        await AppData.Notifications.ShowSuccessAsync("Снимката беше добавена към резервацията.");
+
+        await AppData.Notifications.ShowSuccessAsync(
+            "Снимката беше добавена към резервацията.");
     }
 
     private async Task OpenSalonMapAsync()
@@ -260,6 +314,7 @@ public class BookingViewModel : BaseViewModel
         try
         {
             Location location = new(SelectedSalon.Latitude, SelectedSalon.Longitude);
+
             MapLaunchOptions options = new()
             {
                 Name = SelectedSalon.Name,
@@ -272,11 +327,14 @@ public class BookingViewModel : BaseViewModel
         {
             try
             {
-                await Browser.Default.OpenAsync(SelectedSalon.GoogleMapsUrl, BrowserLaunchMode.External);
+                await Browser.Default.OpenAsync(
+                    SelectedSalon.GoogleMapsUrl,
+                    BrowserLaunchMode.External);
             }
             catch
             {
-                await AppData.Notifications.ShowErrorAsync("Картата не може да бъде отворена на това устройство.");
+                await AppData.Notifications.ShowErrorAsync(
+                    "Картата не може да бъде отворена на това устройство.");
             }
         }
     }

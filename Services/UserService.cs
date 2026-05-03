@@ -34,16 +34,14 @@ public class UserService
 
     public User RegisterUser(string fullName, string phoneNumber, string email, string password, Salon? preferredSalon)
     {
-        if (string.IsNullOrWhiteSpace(fullName))
-            throw new InvalidOperationException("Името не може да бъде празно.");
-        if (string.IsNullOrWhiteSpace(phoneNumber))
-            throw new InvalidOperationException("Телефонът не може да бъде празен.");
-        if (string.IsNullOrWhiteSpace(email))
-            throw new InvalidOperationException("Имейлът не може да бъде празен.");
-        if (string.IsNullOrWhiteSpace(password) || password.Length < 4)
-            throw new InvalidOperationException("Паролата трябва да бъде поне 4 символа.");
+        ValidateRegistrationData(fullName, phoneNumber, email, password);
+
+        fullName = fullName.Trim();
+        phoneNumber = phoneNumber.Trim();
+        email = email.Trim().ToLower();
+
         bool emailExists = _registeredUsers.Any(u =>
-            u.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+            u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
 
         if (emailExists)
             throw new InvalidOperationException("Вече има регистриран профил с този имейл. Влезте в профила си.");
@@ -53,9 +51,9 @@ public class UserService
         User user = new()
         {
             Id = nextId,
-            FullName = fullName.Trim(),
-            PhoneNumber = phoneNumber.Trim(),
-            Email = email.Trim(),
+            FullName = fullName,
+            PhoneNumber = phoneNumber,
+            Email = email,
             Password = password,
             LoyaltyPoints = 0,
             PreferredSalonId = preferredSalon?.Id ?? 0,
@@ -66,43 +64,54 @@ public class UserService
 
         _registeredUsers.Add(user);
         _currentUser = user;
+
         SaveUsersToFile();
         CurrentUserChanged?.Invoke();
 
         return user;
     }
-    public void RemoveLoyaltyPoints(int points)
-    {
-        if (_currentUser == null)
-            throw new InvalidOperationException("Първо трябва да имате активен профил.");
-
-        _currentUser.LoyaltyPoints = Math.Max(0, _currentUser.LoyaltyPoints - points);
-        SaveUsersToFile();
-        CurrentUserChanged?.Invoke();
-    }
 
     public User RegisterUser(string fullName, string phoneNumber, string email, string password)
         => RegisterUser(fullName, phoneNumber, email, password, null);
-
-    // Оставено за старите страници в проекта, които още извикват стария метод.
-    public User RegisterUser(string fullName, string phoneNumber, string email, Salon preferredSalon)
-        => RegisterUser(fullName, phoneNumber, email, "1234", preferredSalon);
 
     public User Login(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email))
             throw new InvalidOperationException("Въведете имейл.");
+
         if (string.IsNullOrWhiteSpace(password))
             throw new InvalidOperationException("Въведете парола.");
 
+        email = email.Trim().ToLower();
+
         User? user = _registeredUsers.FirstOrDefault(u =>
-            u.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+            u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
 
         if (user == null || user.Password != password)
             throw new InvalidOperationException("Грешен имейл или парола.");
 
         _currentUser = user;
         CurrentUserChanged?.Invoke();
+
+        return user;
+    }
+
+    public User LoginSavedUser(User selectedUser, string password)
+    {
+        if (selectedUser == null)
+            throw new InvalidOperationException("Моля, изберете профил.");
+
+        if (string.IsNullOrWhiteSpace(password))
+            throw new InvalidOperationException("Въведете парола.");
+
+        User? user = _registeredUsers.FirstOrDefault(u => u.Id == selectedUser.Id);
+
+        if (user == null || user.Password != password)
+            throw new InvalidOperationException("Грешна парола.");
+
+        _currentUser = user;
+        CurrentUserChanged?.Invoke();
+
         return user;
     }
 
@@ -110,12 +119,12 @@ public class UserService
     {
         if (_currentUser == null)
             throw new InvalidOperationException("Няма активен профил за редакция.");
+
         if (string.IsNullOrWhiteSpace(user.FullName))
             throw new InvalidOperationException("Името не може да бъде празно.");
+
         if (string.IsNullOrWhiteSpace(user.PhoneNumber))
             throw new InvalidOperationException("Телефонът не може да бъде празен.");
-        if (string.IsNullOrWhiteSpace(user.Email))
-            throw new InvalidOperationException("Имейлът не може да бъде празен.");
 
         User? existing = _registeredUsers.FirstOrDefault(u => u.Id == user.Id);
 
@@ -127,7 +136,7 @@ public class UserService
         {
             existing.FullName = user.FullName.Trim();
             existing.PhoneNumber = user.PhoneNumber.Trim();
-            existing.Email = user.Email.Trim();
+            existing.Email = user.Email.Trim().ToLower();
             existing.Password = string.IsNullOrWhiteSpace(user.Password) ? existing.Password : user.Password;
             existing.LoyaltyPoints = user.LoyaltyPoints;
             existing.ProfileImagePath = user.ProfileImagePath;
@@ -138,6 +147,7 @@ public class UserService
         }
 
         _currentUser = _registeredUsers.First(u => u.Id == user.Id);
+
         SaveUsersToFile();
         CurrentUserChanged?.Invoke();
     }
@@ -145,6 +155,7 @@ public class UserService
     public void SetCurrentUser(int userId)
     {
         User? user = _registeredUsers.FirstOrDefault(u => u.Id == userId);
+
         if (user == null)
             throw new InvalidOperationException("Профилът не е намерен.");
 
@@ -163,7 +174,25 @@ public class UserService
         if (_currentUser == null)
             throw new InvalidOperationException("Първо трябва да имате активен профил.");
 
+        if (points <= 0)
+            return;
+
         _currentUser.AddLoyaltyPoints(points);
+
+        SaveUsersToFile();
+        CurrentUserChanged?.Invoke();
+    }
+
+    public void RemoveLoyaltyPoints(int points)
+    {
+        if (_currentUser == null)
+            throw new InvalidOperationException("Първо трябва да имате активен профил.");
+
+        if (points <= 0)
+            return;
+
+        _currentUser.LoyaltyPoints = Math.Max(0, _currentUser.LoyaltyPoints - points);
+
         SaveUsersToFile();
         CurrentUserChanged?.Invoke();
     }
@@ -174,16 +203,46 @@ public class UserService
 
         List<LoyaltyBadge> badges = new()
         {
-            new LoyaltyBadge { Id = 1, Title = "Нов клиент", Description = "Направена първа резервация.", RequiredPoints = 10 },
-            new LoyaltyBadge { Id = 2, Title = "Редовен клиент", Description = "Направени няколко успешни резервации.", RequiredPoints = 20 },
-            new LoyaltyBadge { Id = 3, Title = "Beauty Lover", Description = "Редовен потребител на приложението.", RequiredPoints = 50 },
-            new LoyaltyBadge { Id = 4, Title = "VIP клиент", Description = "Потребител с висока активност.", RequiredPoints = 100 }
+            new LoyaltyBadge { Id = 1, Title = "Нов клиент", Description = "Направена първа резервация.", RequiredPoints = 20 },
+            new LoyaltyBadge { Id = 2, Title = "Редовен клиент", Description = "Направени няколко успешни резервации.", RequiredPoints = 30 },
+            new LoyaltyBadge { Id = 3, Title = "Beauty Lover", Description = "Редовен потребител на приложението.", RequiredPoints = 70 },
+            new LoyaltyBadge { Id = 4, Title = "VIP клиент", Description = "Потребител с висока активност.", RequiredPoints = 150 }
         };
 
-        foreach (var badge in badges)
+        foreach (LoyaltyBadge badge in badges)
             badge.CheckUnlock(points);
 
         return badges;
+    }
+
+    private static void ValidateRegistrationData(string fullName, string phoneNumber, string email, string password)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+            throw new InvalidOperationException("Името не може да бъде празно.");
+
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+            throw new InvalidOperationException("Телефонът не може да бъде празен.");
+
+        phoneNumber = phoneNumber.Trim();
+
+        if (phoneNumber.Length != 10 || !phoneNumber.All(char.IsDigit))
+            throw new InvalidOperationException("Телефонният номер трябва да съдържа точно 10 цифри.");
+
+        if (string.IsNullOrWhiteSpace(email))
+            throw new InvalidOperationException("Имейлът не може да бъде празен.");
+
+        email = email.Trim().ToLower();
+
+        bool validEmail =
+            email.EndsWith("@gmail.com") ||
+            email.EndsWith("@tu-sofia.bg") ||
+            email.EndsWith("@abv.bg");
+
+        if (!validEmail)
+            throw new InvalidOperationException("Имейлът трябва да завършва на @gmail.com, @tu-sofia.bg или @abv.bg.");
+
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 4)
+            throw new InvalidOperationException("Паролата трябва да бъде поне 4 символа.");
     }
 
     private void LoadUsersFromFile()
@@ -209,7 +268,10 @@ public class UserService
     {
         try
         {
-            string json = JsonSerializer.Serialize(_registeredUsers, new JsonSerializerOptions { WriteIndented = true });
+            string json = JsonSerializer.Serialize(
+                _registeredUsers,
+                new JsonSerializerOptions { WriteIndented = true });
+
             File.WriteAllText(_filePath, json);
         }
         catch
