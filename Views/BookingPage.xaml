@@ -26,9 +26,6 @@
                            TextColor="#7A2F54"
                            FontAttributes="Bold" />
 
-                    <Button Text="Отвори карта на избрания салон"
-                            Command="{Binding OpenSalonMapCommand}"
-                            BackgroundColor="#7A2F54" />
 
                     <Frame BackgroundColor="#FFF0F5"
                            BorderColor="#D96BA0"

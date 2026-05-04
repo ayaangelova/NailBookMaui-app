@@ -91,7 +91,7 @@ public class BookingViewModel : BaseViewModel
     public ICommand PickImageCommand { get; }
 
     public ICommand GoToRegistrationCommand { get; }
-    public ICommand OpenSalonMapCommand { get; }
+    
 
     public BookingViewModel()
     {
@@ -101,7 +101,7 @@ public class BookingViewModel : BaseViewModel
         PickImageCommand = new AsyncCommand(PickImageAsync);
 
         GoToRegistrationCommand = new AsyncCommand(GoToRegistrationAsync);
-        OpenSalonMapCommand = new AsyncCommand(OpenSalonMapAsync);
+        
 
         AppData.Users.CurrentUserChanged += UpdateLoginWarning;
         AppData.Locations.SelectedSalonChanged += RefreshSelectedSalonFromActive;
@@ -280,30 +280,5 @@ public class BookingViewModel : BaseViewModel
             "Снимката беше добавена към резервацията.");
     }
 
-    private async Task OpenSalonMapAsync()
-    {
-        if (SelectedSalon == null)
-        {
-            await AppData.Notifications.ShowErrorAsync("Моля, изберете салон.");
-            return;
-        }
-
-        try
-        {
-            string lat = SelectedSalon.Latitude
-                .ToString(System.Globalization.CultureInfo.InvariantCulture);
-            string lon = SelectedSalon.Longitude
-                .ToString(System.Globalization.CultureInfo.InvariantCulture);
-
-            string url = $"https://www.google.com/maps/search/?api=1&query={lat},{lon}";
-
-            await Browser.Default.OpenAsync(
-                new Uri(url),
-                BrowserLaunchMode.SystemPreferred);
-        }
-        catch (Exception ex)
-        {
-            await AppData.Notifications.ShowErrorAsync($"Грешка при отваряне на картата: {ex.Message}");
-        }
-    }
+    
 }
