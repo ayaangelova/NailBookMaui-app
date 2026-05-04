@@ -55,6 +55,9 @@ public class AppointmentService
         if (!IsTimeAvailable(dateTime, salon.Id))
             throw new InvalidOperationException("Избраният час вече е зает в този салон.");
 
+        if (!IsWithinWorkingHours(dateTime, service.DurationMinutes))
+            throw new InvalidOperationException("Избраният час е извън работното време на салона.");
+
         Appointment appointment = new()
         {
             Id = _nextId++,
@@ -76,7 +79,16 @@ public class AppointmentService
 
         return appointment;
     }
+    private bool IsWithinWorkingHours(DateTime appointmentDateTime, int durationMinutes)
+    {
+        TimeSpan start = new(9, 0, 0);
+        TimeSpan end = new(18, 0, 0);
 
+        TimeSpan appointmentStart = appointmentDateTime.TimeOfDay;
+        TimeSpan appointmentEnd = appointmentStart.Add(TimeSpan.FromMinutes(durationMinutes));
+
+        return appointmentStart >= start && appointmentEnd <= end;
+    }
     public void CancelAppointment(int appointmentId)
     {
         Appointment? appointment = _appointments.FirstOrDefault(a => a.Id == appointmentId);

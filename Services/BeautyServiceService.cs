@@ -49,7 +49,7 @@ public class BeautyServiceService
 
     public List<BeautyService> GetServicesBySalonId(int salonId) => _services
         .Where(s => s.SalonId == salonId)
-        .OrderBy(s => s.Price)
+        .OrderBy(s => s.Price)  
         .ToList();
 
     public List<BeautyService> GetPopularServices() => _services
