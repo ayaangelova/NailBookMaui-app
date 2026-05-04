@@ -18,7 +18,7 @@ public class ExploreViewModel : BaseViewModel
 
     public void LoadContent()
     {
-        RefreshFooter();
+        
         Promotions.Clear();
         Designs.Clear();
         Tips.Clear();

@@ -52,7 +52,7 @@ public class HomeViewModel : BaseViewModel
 
     public void LoadData()
     {
-        RefreshFooter();
+       
 
         PopularServices.Clear();
         foreach (var service in AppData.BeautyServices.GetPopularServices())

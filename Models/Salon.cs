@@ -22,8 +22,5 @@ public class Salon
     public string CoordinatesText =>
         $"{Latitude:F4}, {Longitude:F4}";
 
-    public string GoogleMapsUrl =>
-        $"https://www.google.com/maps/search/?api=1&query={Latitude.ToString(
-            System.Globalization.CultureInfo.InvariantCulture)}," +
-        $"{Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+   
 }

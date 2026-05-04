@@ -67,7 +67,7 @@ public class ProfileViewModel : BaseViewModel
         LoadBadges();
         LoadRegisteredUsers();
         UpdateUserType();
-        RefreshFooter();
+        
     }
 
     private void UpdateUserType()
@@ -76,9 +76,9 @@ public class ProfileViewModel : BaseViewModel
 
         UserType = points switch
         {
-            >= 100 => "VIP клиент",
-            >= 50 => "Лоялен клиент",
-            >= 20 => "Редовен клиент",
+            >= 150 => "VIP клиент",
+            >= 70 => "Beauty lover",
+            >= 30 => "Редовен клиент",
             _ => "Нов клиент"
         };
     }

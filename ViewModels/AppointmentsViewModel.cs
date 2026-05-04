@@ -51,7 +51,7 @@ public class AppointmentsViewModel : BaseViewModel
     }
     public void LoadAppointments()
     {
-        RefreshFooter();
+       
         Appointments.Clear();
 
         if (!AppData.Users.HasCurrentUser)

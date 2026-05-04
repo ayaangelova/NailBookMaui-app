@@ -128,7 +128,7 @@ public class LoginViewModel : BaseViewModel
         try
         {
             User user = AppData.Users.Login(LoginEmail, LoginPassword);
-            SelectPreferredSalon(user);
+           
             OpenMainApp();
         }
         catch (Exception ex)
@@ -148,7 +148,7 @@ public class LoginViewModel : BaseViewModel
             }
 
             User user = AppData.Users.Login(SelectedSavedUser.Email, SavedUserPassword);
-            SelectPreferredSalon(user);
+            
             OpenMainApp();
         }
         catch (Exception ex)
@@ -167,7 +167,7 @@ public class LoginViewModel : BaseViewModel
 
             LoadSavedUsers();
 
-            SelectPreferredSalon(user);
+            
             OpenMainApp();
         }
         catch (Exception ex)
@@ -176,15 +176,7 @@ public class LoginViewModel : BaseViewModel
         }
     }
 
-    private static void SelectPreferredSalon(User user)
-    {
-        Salon? preferredSalon = AppData.Locations.GetSalonById(user.PreferredSalonId);
-
-        if (preferredSalon != null)
-            AppData.Locations.SelectSalon(preferredSalon);
-        else
-            AppData.Locations.ClearSelectedSalon();
-    }
+    
 
     private static void OpenMainApp()
     {

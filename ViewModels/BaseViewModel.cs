@@ -25,15 +25,8 @@ public class BaseViewModel : INotifyPropertyChanged
     public string FooterSalonAddress => "email: salonNonStop@gmail.com";
     public string FooterSalonPhone => "Phone: 0882540765";
 
-    public string FooterSalonLocation => string.Empty;
 
-    public void RefreshFooter()
-    {
-        
-        OnPropertyChanged(nameof(FooterSalonAddress));
-        OnPropertyChanged(nameof(FooterSalonPhone));
-        OnPropertyChanged(nameof(FooterSalonLocation));
-    }
+    
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

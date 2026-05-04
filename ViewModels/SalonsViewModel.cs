@@ -51,7 +51,7 @@ public class SalonsViewModel : BaseViewModel
 
     public ICommand LoadLocationCommand { get; }
     public ICommand SelectSalonCommand { get; }
-    public ICommand OpenMapCommand { get; }
+    
     public ICommand RefreshSalonsCommand { get; }
     public ICommand ChooseSalonCommand { get; }
     public ICommand ActivateSalonCommand { get; }
@@ -62,7 +62,7 @@ public class SalonsViewModel : BaseViewModel
 
         LoadLocationCommand = new AsyncCommand(LoadLocationAsync);
         SelectSalonCommand = new AsyncCommand(SelectSalonAsync);
-        OpenMapCommand = new AsyncCommand(OpenMapAsync);
+        
         RefreshSalonsCommand = new Command(LoadSalons);
         ChooseSalonCommand = new Command<Salon>(ChooseSalon);
         ActivateSalonCommand = new Command<Salon>(async salon => await ActivateSalonAsync(salon));
@@ -84,7 +84,7 @@ public class SalonsViewModel : BaseViewModel
 
         SelectedSalon = AppData.Locations.SelectedSalon;
         RefreshActiveSalonText();
-        RefreshFooter();
+       
     }
 
     private void SearchSalons()
@@ -141,7 +141,8 @@ public class SalonsViewModel : BaseViewModel
         }
 
         RefreshActiveSalonText();
-        RefreshFooter();
+       
+
 
         await AppData.Notifications.ShowSuccessAsync($"{salon.Name} е избран като салон по подразбиране.");
     }
@@ -199,23 +200,5 @@ public class SalonsViewModel : BaseViewModel
         await ActivateSalonAsync(SelectedSalon);
     }
 
-    private async Task OpenMapAsync()
-    {
-        Salon? salon = SelectedSalon ?? AppData.Locations.SelectedSalon;
-
-        if (salon == null)
-        {
-            await AppData.Notifications.ShowErrorAsync("Моля, изберете салон от списъка.");
-            return;
-        }
-
-        try
-        {
-            await Launcher.Default.OpenAsync(salon.GoogleMapsUrl);
-        }
-        catch
-        {
-            await AppData.Notifications.ShowErrorAsync("Картата не може да бъде отворена.");
-        }
-    }
+    
 }

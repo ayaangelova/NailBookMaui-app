@@ -22,7 +22,7 @@ public class ServicesViewModel : BaseViewModel
     {
         Title = "Услуги";
         LoadServices();
-        RefreshFooter();
+        
     }
 
     public void LoadServices()
